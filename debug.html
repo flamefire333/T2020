@@ -1,0 +1,405 @@
+<html>
+<style>
+body{
+    background-color: #000000;
+    color: #FFFFFF;
+}
+table{
+    width: 100%;
+}
+.reg0{
+    background-color:#111111;
+}
+.reg1{
+    background-color:#191919;
+}
+.rega{
+    background-color:#331111;
+}
+.regb{
+    background-color:#113311;
+}
+.regt{
+    background-color:#111133;
+}
+textarea{
+    background-color:#111111;
+    color:#FFFFFF;
+    width: 100%;
+    height: 500px;
+}
+.DB{
+    background-color:#111111;
+    color:#FFFFFF;
+}
+.DB:hover{
+    color:#FFFF00;
+}
+a{
+    color:#FF8800;
+}
+</style>
+    <body>
+        <table><tr>
+                <td id="PC"></td>
+                <td id="r0"></td>
+                <td id="r1"></td>
+                <td id="r2"></td>
+                <td id="r3"></td>
+                <td id="r4"></td>
+                <td id="r5"></td>
+                <td id="r6"></td>
+                <td id="r7"></td>
+                <td id="r8"></td>
+                <td id="r9"></td>
+                <td id="r10"></td>
+                <td id="r11"></td>
+                <td id="r12"></td>
+                <td id="r13"></td>
+                <td id="r14"></td>
+                <td id="r15"></td>
+            </tr></table>
+            <br />
+            <h2 id="instr">NO INSTRUCTION LOADED</h2>
+            <table>
+                <tr>
+                    <th>HEX INPUT</th>
+                    <th>MEMORY</th>
+                    <th>PROGRAM OUTPUT</th>
+                </tr>
+                <tr>
+                    <td><textarea id = "input"></textarea></td>
+                    <td><div id = "MEMHolder" style="height:500px;overflow:scroll;"><table id = "MEM" style="width:100%;background-color:#111111;"></table></div></td>
+                    <td><textarea readonly id = "output"></textarea></td>
+                </tr>
+                <tr>
+                    <td><input type="button" value="START/RESTART" class="DB" onclick="reset();loadMem();"></input><input type="button" value="STEP" class="DB" onclick="stepQ();"></input><input type="button" value="EXECUTE" class="DB" onclick="execute();"></input></td>
+                    <td></td><td></td>
+            </table>
+            <script type="text/javascript">
+                var regs = [];
+                var memory = {};
+                var PC = "";
+                var OU = document.getElementById("output");
+                function reset(){
+                    PC = "0000000000000000";
+                    regs[0] = "0000000000000000";
+                    var tempIndex = 1;
+                    while(tempIndex < 16){
+                        regs[tempIndex] = "XXXXXXXXXXXXXXXX";
+                        tempIndex = tempIndex + 1;
+                    }
+                    OU.value = "";
+                }
+                function dispMem(){
+                    var memOut = "";
+                    var loc = getPC();
+                    var count = 0;
+                    var before = 0;
+                    for(n in memory){
+                        if(n < loc){
+                            before = before + 1;
+                        }
+                        if(n >= loc || 1 == 1){
+                            var extra = (n == loc || n == ((loc + 1) % (1 << 15))) ? "background-color: #114411;" : "";
+                            memOut = memOut + "<tr style='height:20px;" + extra +  "'><td>" + n + ": " + memory[n] + "</td></tr>";
+                            count = count + 1;
+                            if(count >= 25){
+                                //break;
+                            }
+                        }
+                    }
+                    //document.getElementById("MEMHolder").scrollTop = before * 30;
+                    while(count < 25){
+                        memOut = memOut + "<tr><td></td></tr>";
+                        count = count + 1;
+                    }
+                    document.getElementById("MEM").innerHTML = memOut;
+                }
+                function loadMem(){
+                    memory = {};
+                    var data = document.getElementById("input").value;
+                    var index = 0;
+                    var lines = data.split("\n");
+                    var isComment = 0;
+                    for(n in lines){
+                        while(lines[n].length > 0 && lines[n][0] == " "){
+                            lines[n] = lines[n].substring(1);
+                        }
+                        if(lines[n][0] == '@'){
+                            index = 2 * Number("0x" + lines[n].substring(1));
+                            continue;
+                        }
+                        if(lines[n].substring(0,2) == "/*"){
+                            isComment = 1;
+                        }
+                        if(lines[n][0] == '/' || lines[n][0] == '#' || lines[n] == "" || isComment){
+                            if(lines[n].substring(0,2) == "*/"){
+                                isComment = 0;
+                            }
+                            continue;
+                        }
+                        memory[index] = lines[n].substring(0,2).toLowerCase();
+                        index = index + 1;
+                        if(lines[n].length >= 4){
+                            memory[index] = lines[n].substring(2,4).toLowerCase();
+                            index = index + 1;
+                        }
+                    }
+                    dispMem();
+                }
+                reset();
+                var hexes = {
+                "0000" : "0",
+                "0001" : "1",
+                "0010" : "2",
+                "0011" : "3",
+                "0100" : "4",
+                "0101" : "5",
+                "0110" : "6",
+                "0111" : "7",
+                "1000" : "8",
+                "1001" : "9",
+                "1010" : "A",
+                "1011" : "B",
+                "1100" : "C",
+                "1101" : "D",
+                "1110" : "E",
+                "1111" : "F"
+                };
+                var a = -1;
+                var aa = -1;
+                var b = -1;
+                var bb = -1;
+                var t = -1;
+                var tt = -1;
+                function toBinS(x){
+                    var val = "";
+                    var index = 0;
+                    if(x < 0){
+                        x = x + 65536;
+                    }
+                    while(index < 16){
+                        val = ((x >> index) % 2) + val;
+                        index = index + 1;
+                    }
+                    return val;
+                }
+                function getPC(){
+                    return Number("0b" + PC);
+                }
+                function setPC(x){
+                    PC = toBinS(x);
+                }
+                function stepPC(){
+                    setPC(getPC() + 2);
+                }
+                function getBin(x){
+                    x = x.toUpperCase();
+                    for(n in hexes){
+                        if(hexes[n] == x){
+                            return n;
+                        }
+                    }
+                    return "XXXX";
+                }
+                function getDecB(x){
+                    return Number("0b" + x);
+                }
+                function getDec(x){
+                    return Number("0x" + x);
+                }
+                function convert(x){
+                    var step = 0;
+                    var output = "";
+                    while(step < 4){
+                        var piece = x.substring(step * 4, step * 4 + 4);
+                        output = output + ((piece in hexes) ? hexes[piece] : "X");
+                        step = step + 1;
+                    }
+                    return output;
+                }
+                function updateRegDisp(){
+                    var index = 0;
+                    document.getElementById("PC").innerHTML = "<div class='reg1'><h2>PC</h2>0x" + convert(PC) + "</div>";
+                    while(index < 16){
+                        var e = document.getElementById("r" + index);
+                        var regType = aa == index ? "a" : (bb == index ? "b" : (tt == index ? "t" : (index % 2)));
+                        e.innerHTML = "<div class='reg" + regType  + "'><h2>R"+index+"</h2>0x" + convert(regs[index]) + "</div>";
+                        index = index + 1;
+                    }
+                }
+                updateRegDisp();
+                function store(x, addr){
+                    addr = addr % (1 << 16);
+                    var h1 = hexes[x.substring(0,4)];
+                    var h2 = hexes[x.substring(4,8)];
+                    memory[addr] = "" + h1 + h2;
+                    memory[addr] = memory[addr].toLowerCase();
+                }
+                function fetch(x){
+                    x = x % (1 << 16);
+                    if(x in memory){
+                        return memory[x];
+                    }
+                    return "XX";
+                }
+                function getSigned(x){
+                    var val = Number("0b" + x);
+                    if(val > 127){
+                        val = val - 256;
+                    }
+                    return val;
+                }
+                function stepQ(){
+                    var addr = Number("0b" + PC);
+                    var addr2 = addr + 1;
+                    var i1 = fetch(addr);
+                    var i2 = fetch(addr2);
+                    var isSub = i1[0] == '0';
+                    var isMovl = i1[0] == '8';
+                    var isMovh = i1[0] == '9';
+                    var isJz = (i1[0] == 'e') && (i2[0] == '0');
+                    var isJnz = (i1[0] == 'e') && (i2[0] == '1');
+                    var isJs = (i1[0] == 'e') && (i2[0] == '2');
+                    var isJns = (i1[0] == 'e') && (i2[0] == '3');
+                    var isLd = (i1[0] == 'f') && (i2[0] == '0');
+                    var isSt = (i1[0] == 'f') && (i2[0] == '1');
+                    var isUnknown = !(isSub || isMovl || isMovh || isJz || isJnz || isJs || isJns || isLd || isSt);
+                    if(isUnknown){
+                        loop = 0;
+                        current = "UNDEFINED";
+                        alert("PROGRAM HAS TERMINATED");
+                        return -1;
+                    }
+                    aa = -1;
+                    bb = -1;
+                    tt = -1;
+                    a = getDec(i1[1]);
+                    b = getDec(i2[0]);
+                    t = getDec(i2[1]);
+                    var current = "";
+                    if(isSub){
+                        current = "sub " + t + ", " + a + ", " + b;
+                        aa = a;
+                        bb = b;
+                        tt = t;
+                        regs[t] = toBinS(getDecB(regs[a]) - getDecB(regs[b]));
+                        if(t == 0){
+                            OU.value = OU.value + String.fromCharCode(Number("0b" + regs[0].substring(8)));
+                            regs[0] = "0000000000000000";
+                        }
+                        stepPC();
+                    }
+                    if(isMovl){
+                        tt = t;
+                        var imm = getBin(i1[1]) + getBin(i2[0]);
+                        var signedVal = Number("0b" + imm);
+                        current = "movl " + t + ", " + getSigned(imm);
+                        if(i2[1] == '0'){
+                            OU.value = OU.value + String.fromCharCode(Number("0b"+imm));
+                        } else {
+                            var sign = imm[0];
+                            while(imm.length < 16){
+                                imm = sign + imm;
+                            }
+                            regs[t] = imm;
+                       }
+                       stepPC();
+                    }
+                    if(isMovh){
+                        tt = t;
+                        var imm = getBin(i1[1]) + getBin(i2[0]);
+                        current = "movh " + t + ", " + getSigned(imm);
+                        if(i2[1] == '0'){
+                            //Nothing really happens :(
+                        } else {
+                            regs[t] = imm + regs[t].substring(8);
+                        }
+                        stepPC();
+                    }
+                    if(isJz){
+                        aa = a;
+                        tt = t;
+                        current = "jz " + t + ", " + a;
+                        if(regs[a] == "0000000000000000"){
+                            PC = regs[t].substring(0,15) + "0";
+                        } else {
+                            stepPC();
+                        }
+                    }
+                    if(isJnz){
+                        aa = a;
+                        tt = t;
+                        current = "jnz " + t + ", " + a;
+                        if(regs[a] != "0000000000000000"){
+                            PC = regs[t].substring(0,15) + "0";
+                        } else {
+                            stepPC();
+                        }
+                    }
+                    if(isJs){
+                        aa = a;
+                        tt = t;
+                        current = "js " + t + ", " + a;
+                        if(regs[a][0] == "1"){
+                            PC = regs[t].substring(0,15) + "0";
+                        } else {
+                            stepPC();
+                        }
+                    }
+                    if(isJns){
+                        aa = a;
+                        tt = t;
+                        current = "jns " + t + ", " +a;
+                        if(regs[a][0] == "0"){
+                            PC = regs[t].substring(0,15) + "0";
+                        } else {
+                            stepPC();
+                        }
+                    }
+                    if(isLd){
+                        aa = a;
+                        tt = t;
+                        current = "ld " + t + ", " + a;
+                        var addr = getDecB(regs[a]);
+                        regs[t] = toBinS(getDec(fetch(addr) + fetch(addr + 1)));
+                        if(t == 0){
+                            OU.value = OU.value + String.fromCharCode("0b" + regs[0].substring(8));
+                            regs[0] = "0000000000000000";
+                        }
+                        stepPC();
+                    }
+                    if(isSt){
+                        aa = a;
+                        tt = t;
+                        current = "st " + t + ", " + a;
+                        var addr = getDecB(regs[a]);
+                        store(regs[t].substring(0,8), addr);
+                        store(regs[t].substring(8,16), addr + 1);
+                        stepPC();
+                    }
+                    document.getElementById("instr").innerHTML = current;
+                    updateRegDisp();
+                    dispMem();
+                    if(loop){
+                        setTimeout(function(){stepQ();}, 100);
+                    }
+                    return 0;
+                }
+                var loop = 0;
+                function execute(){
+                    reset();
+                    loadMem();
+                    loop = 1;
+                    setTimeout(function () {stepQ();}, 100);
+                    updateRegDisp();
+                    dispMem();
+                }
+            </script>
+            <div>
+                <a href="convert.html">Converter</a><br / >
+                <a href="getTest.html">Test Grabber</a>
+            </div>
+    </body>
+</html>
