@@ -1,0 +1,83 @@
+<html>
+<body>
+<script type="text/javascript">
+//AJAX FROM W3schools: https://www.w3schools.com/xml/ajax_intro.asp
+function loadOptions() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("tests").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "testGetter.php", true);
+      xhttp.send();
+}
+function getTest() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if(this.readyState == 4 && this.status == 200) {
+            document.getElementById("HEX").value = this.responseText;
+        }
+    };
+    var option = document.getElementById("tests").value;
+    xhttp.open("GET", "testGetter.php?test=" + option + ".hex", true);
+    xhttp.send();
+}
+function getOK() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if(this.readyState == 4 && this.status == 200) {
+            document.getElementById("OK").value = this.responseText;
+        }
+    };
+    var option = document.getElementById("tests").value;
+    xhttp.open("GET", "testGetter.php?test=" + option + ".ok", true);
+    xhttp.send();
+}
+</script>
+<style>
+body{
+    background-color: #111111;
+    color: #FFFFFF;
+}
+select{
+    background-color:#121212;
+    color: #FFFFFF;
+}
+table{
+    width:100%;
+}
+textarea{
+    width:100%;
+    height: 500px;
+    background-color: #111111;
+    color: #FFFFFF;
+}
+a{
+    color:#FF8800;
+}
+</style>
+<select id = "tests">
+    <option value = "Q">BANANA</option>
+</select>
+<input type="button" onclick="getTest();getOK()" value = "Grab Test"></input>
+<br />
+<table>
+    <tr>
+        <td>
+            <textarea readonly id="HEX"></textarea>
+        </td>
+        <td>
+            <textarea readonly id="OK"></textarea>
+        </td>
+    </tr>
+</table>
+</body>
+<script type="text/javascript">
+loadOptions();
+</script>
+<div>
+<a href="convert.html">Converter</a><br />
+<a href="debug.html">Debugger</a><br />
+</div>
+</html>
