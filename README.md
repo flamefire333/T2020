@@ -11,6 +11,8 @@ If you're running the files on your own computer you can just edit them in any e
 If you're on the CS machines you need to put them in your public_html folder (or some subdirectory) and then run the following two commands while in the directory with the files:
 
 chmod o+x *
+
 chmod o+r *
+
 
 These make all the files executable and readable so you can access them by URL.
