@@ -14,13 +14,13 @@ table{
     background-color:#191919;
 }
 .rega{
-    background-color:#331111;
+    background-color:#771111;
 }
 .regb{
-    background-color:#113311;
+    background-color:#117711;
 }
 .regt{
-    background-color:#111133;
+    background-color:#111177;
 }
 textarea{
     background-color:#111111;
@@ -101,7 +101,7 @@ a{
                             before = before + 1;
                         }
                         if(n >= loc || 1 == 1){
-                            var extra = (n == loc || n == ((loc + 1) % (1 << 15))) ? "background-color: #114411;" : "";
+                            var extra = (n == ((lastPC) % (1 << 16)) || n == ((lastPC + 1) % (1 << 16))) ? "background-color: #114411;" : "";
                             memOut = memOut + "<tr style='height:20px;" + extra +  "'><td>" + n + ": " + memory[n] + "</td></tr>";
                             count = count + 1;
                             if(count >= 25){
@@ -122,27 +122,26 @@ a{
                     var index = 0;
                     var lines = data.split("\n");
                     var isComment = 0;
+                    var line = "";
                     for(n in lines){
-                        while(lines[n].length > 0 && lines[n][0] == " "){
-                            lines[n] = lines[n].substring(1);
-                        }
-                        if(lines[n][0] == '@'){
-                            index = 2 * Number("0x" + lines[n].substring(1));
+                        line = lines[n].trim();
+                        if(line[0] == '@'){
+                            index = 2 * Number("0x" + line.substring(1));
                             continue;
                         }
-                        if(lines[n].substring(0,2) == "/*"){
+                        if(line.indexOf("/*") != -1){
                             isComment = 1;
                         }
-                        if(lines[n][0] == '/' || lines[n][0] == '#' || lines[n] == "" || isComment){
-                            if(lines[n].substring(0,2) == "*/"){
+                        if(line[0] == '/' || line[0] == '#' || line == "" || isComment){
+                            if(line.indexOf("*/") != -1){
                                 isComment = 0;
                             }
                             continue;
                         }
-                        memory[index] = lines[n].substring(0,2).toLowerCase();
+                        memory[index] = line.substring(0,2).toLowerCase();
                         index = index + 1;
-                        if(lines[n].length >= 4){
-                            memory[index] = lines[n].substring(2,4).toLowerCase();
+                        if(line.length >= 4){
+                            memory[index] = line.substring(2,4).toLowerCase();
                             index = index + 1;
                         }
                     }
@@ -251,8 +250,19 @@ a{
                     }
                     return val;
                 }
+                function isRegADefined(){
+                    return regs[aa].indexOf("X") == -1;
+                }
+                function isRegBDefined(){
+                    return regs[bb].indexOf("X") == -1;
+                }
+                function isRegTDefined(){
+                    return regs[tt].indexOf("X") == -1
+                }
+                var lastPC = 0;
                 function stepQ(){
                     var addr = Number("0b" + PC);
+                    lastPC = addr;
                     var addr2 = addr + 1;
                     var i1 = fetch(addr);
                     var i2 = fetch(addr2);
@@ -269,7 +279,12 @@ a{
                     if(isUnknown){
                         loop = 0;
                         current = "UNDEFINED";
-                        alert("PROGRAM HAS TERMINATED");
+                        if(i1.indexOf("X") != -1 || i2.indexOf("X") != -1){
+                            alert("PROGRAM FAILED TO HALT ON A VALID HALT INSTRUCTION");
+                        } else {
+                            alert("PROGRAM HAS HALTED ON A VALID HALT INSTRUCTION");
+                        }
+                        dispMem();
                         return -1;
                     }
                     aa = -1;
@@ -284,6 +299,12 @@ a{
                         aa = a;
                         bb = b;
                         tt = t;
+                        if(!isRegADefined() || !isRegBDefined()){
+                            loop = 0;
+                            current = "UNDEFINED SUBTRACTION";
+                            alert("PROGRAM TRIED DOING SUBTRACTION WITH UNDEFINED REGISTERS AT BYTE ADDRESS: " + addr);
+                            return -1;
+                        }
                         regs[t] = toBinS(getDecB(regs[a]) - getDecB(regs[b]));
                         if(t == 0){
                             OU.value = OU.value + String.fromCharCode(Number("0b" + regs[0].substring(8)));
@@ -317,6 +338,14 @@ a{
                             regs[t] = imm + regs[t].substring(8);
                         }
                         stepPC();
+                    }
+                    if(isJz | isJnz | isJs | isJns){
+                        if(!isRegADefined() || !isRegTDefined()){
+                                                loop = 0;
+                                                current = "UNDEFINED JUMP";
+                                                alert("PROGRAM TRIED DOING JUMP WITH UNDEFINED REGISTERS AT BYTE ADDRESS: " + addr);
+                                                return -1;
+                        }
                     }
                     if(isJz){
                         aa = a;
@@ -362,8 +391,14 @@ a{
                         aa = a;
                         tt = t;
                         current = "ld " + t + ", " + a;
-                        var addr = getDecB(regs[a]);
-                        regs[t] = toBinS(getDec(fetch(addr) + fetch(addr + 1)));
+                        if(!isRegADefined()){
+                                                loop = 0;
+                                                current = "UNDEFINED LOAD";
+                                                alert("PROGRAM TRIED DOING LOAD WITH UNDEFINED REGISTER AT BYTE ADDRESS: " + addr);
+                                                return -1;
+                        }
+                        var _addr = getDecB(regs[a]);
+                        regs[t] = toBinS(getDec(fetch(_addr) + fetch(_addr + 1)));
                         if(t == 0){
                             OU.value = OU.value + String.fromCharCode("0b" + regs[0].substring(8));
                             regs[0] = "0000000000000000";
@@ -373,10 +408,16 @@ a{
                     if(isSt){
                         aa = a;
                         tt = t;
+                        if(!isRegADefined() || !isRegBDefined()){
+                                                loop = 0;
+                                                current = "UNDEFINED STORE";
+                                                alert("PROGRAM TRIED DOING STORE WITH UNDEFINED REGISTERS AT BYTE ADDRESS: " + addr);
+                                                return -1;
+                        }
                         current = "st " + t + ", " + a;
-                        var addr = getDecB(regs[a]);
-                        store(regs[t].substring(0,8), addr);
-                        store(regs[t].substring(8,16), addr + 1);
+                        var _addr = getDecB(regs[a]);
+                        store(regs[t].substring(0,8), _addr);
+                        store(regs[t].substring(8,16), _addr + 1);
                         stepPC();
                     }
                     document.getElementById("instr").innerHTML = current;

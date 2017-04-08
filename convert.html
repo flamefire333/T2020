@@ -39,7 +39,7 @@ var hb = {
     "f" : "1111"
 };
 function toNum(x){
-    if(x == "xxxx"){
+    if(x == "xxxx" || x == undefined){
         return "?";
     }
     if(x[0] == "["){
@@ -76,6 +76,9 @@ function FN(x){
     return "xxxx";
 }
 function FH(x){
+    if(x == undefined){
+        return "xxxx";
+    }
     if(x in hb){
         return hb[x];
     }
@@ -94,7 +97,7 @@ function getImmColor(){
     return "#FF0000";
 }
 function toBin(x, offset){
-    if((typeof x) == "undefined"){
+    if(x == undefined){
         return "xxxx xxxx";
     }
     if(!(x in labels) && isNaN(x) && !(x[0] == "'" && x[2] == "'")){
@@ -124,6 +127,9 @@ function toBin(x, offset){
     return bin;
 }
 function wrap(x){
+    if(x == undefined){
+        return "X";
+    }
     if(x in hexes){
         return hexes[x];
     }
@@ -138,19 +144,21 @@ function movB2H(){
     var d;
     var hex = "";
     var isComment = 0;
+    var line = "";
     for(d in ds){
-        if(ds[d]!=""){
-            if(ds[d].indexOf("/*") != -1) {
+        line = ds[d].trim();
+        if(line!=""){
+            if(line.indexOf("/*") != -1) {
                 isComment = 1;
             }
-            if(ds[d][0] == '@' || ds[d][0] == '/' || ds[d][0] == '#' || isComment){
+            if(line[0] == '@' || line[0] == '/' || line[0] == '#' || isComment){
                 hex = hex + ds[d] + "\n";
-                if(ds[d].indexOf("*/") != -1){
+                if(line.indexOf("*/") != -1){
                     isComment = 0;
                 }
                 continue;
             }
-            var words = ds[d].split(" ");
+            var words = line.split(" ");
             hex = hex + wrap(words[0]) + wrap(words[1]) + wrap(words[2]) + wrap(words[3]) + "\n";
         }
     }
@@ -172,24 +180,26 @@ function movB2T(){
     var d;
     var t = "";
     var isComment = 0;
+    var line = "";
     for(d in ds){
-        if(ds[d]==""){
+        line = ds[d].trim();
+        if(line==""){
             if(d != ds.length - 1){
                 t = t + "\n<br />";
             }
             continue;
         }else{
-            if(ds[d].substring(0, 2) == "/*"){
+            if(line.indexOf("/*") != -1){
                 isComment = 1;
             }
-            if(ds[d][0] == '@' || ds[d][0] == '/' || ds[d][0] == '#' || isComment){
+            if(line[0] == '@' || line[0] == '/' || line[0] == '#' || isComment){
                 t = t + ds[d] + "\n<br />";
-                if(ds[d].substring(0, 2) == "*/"){
+                if(line.indexOf("*/")){
                     isComment = 0;
                 }
                 continue;
             }
-            var b = ds[d].split(" ");
+            var b = line.split(" ");
             if(b[0] == "0000"){
                 t = t + "sub " + toNum(b[3]) + ", " + toNum(b[1]) + ", " + toNum(b[2]);
             }else if(b[0] == "1000"){
@@ -227,22 +237,24 @@ function BINGL(){
     var mem = 0;
     var temp;
     var isComment = 0;
+    var line = "";
     while(n < ds.length){
-        if(ds[n] == "" && n == ds.length - 1){
+        line = ds[n].trim();
+        if(line == "" && n == ds.length - 1){
             break;
         }
-        if(ds[n][0] == '@'){
-            mem = Number("0x" + ds[n].substring(1));
+        if(line[0] == '@'){
+            mem = Number("0x" + line[n].substring(1));
         }
-        if(ds[n].indexOf("/*") != -1){
+        if(line.indexOf("/*") != -1){
             isComment = 1;
         }
         temp = "" + n;
-        if(isComment == 0 && ds[n][0] != '/' && ds[n] != "" && ds[n][0] != '@' && ds[n][0] != '#'){
+        if(isComment == 0 && line[0] != '/' && line != "" && line[0] != '@' && line[0] != '#'){
             temp = "[" +mem + "] " + temp;
             mem = mem + 2;
         }
-        if(ds[n].indexOf("*/") != -1){
+        if(line.indexOf("*/") != -1){
             isComment = 0;
         }
         while(temp.length < 11){
@@ -262,18 +274,20 @@ function HEXGL(){
     var paired = 1;
     var mem = 0;
     var isComment = 0;
+    var line = "";
     while(n < ds.length){
-        if(ds[n] == "" && n == ds.length - 1){
+        line = ds[n].trim();
+        if(line == "" && n == ds.length - 1){
             break;
         }
-        if(ds[n][0] == '@'){
-            mem = Number("0x" + ds[n].substring(1));
+        if(line[0] == '@'){
+            mem = Number("0x" + line.substring(1));
         }
-        if(ds[n].indexOf("/*") != -1){
+        if(line.indexOf("/*") != -1){
             isComment = 1;
         }
         var temp = "" + lineCount;
-        if(isComment == 0 && ds[n][0] != '/' && ds[n] != "" && ds[n][0] != '@' && ds[n][0] != '#'){
+        if(isComment == 0 && line[0] != '/' && line != "" && line[0] != '@' && line[0] != '#'){
             var other = "";
             while(other.length < temp.length){
                 other = other + " ";
@@ -282,13 +296,13 @@ function HEXGL(){
             paired = 1 - paired;
             var hexCount = 0;
             var ind = 0;
-            while(ind < ds[n].length){
-                if(ds[n][ind] == "["){
-                    while(ds[n][ind] != "]" && ind < ds[n].length){
+            while(ind < line.length){
+                if(line[ind] == "["){
+                    while(line[ind] != "]" && ind < line.length){
                         ind = ind + 1;
                     }
                 }
-                if(ds[n][ind] == " "){
+                if(line[ind] == " "){
                     ind = ind + 1;
                     continue;
                 }
@@ -297,7 +311,7 @@ function HEXGL(){
             }
             mem = mem + (hexCount / 2);
         }
-        if(ds[n].indexOf("*/") != -1){
+        if(line.indexOf("*/") != -1){
             isComment = 0;
         }
         while(temp.length < 11){
@@ -335,6 +349,7 @@ function mTIS(){
     var mem = 0;
     var isComment = 0;
     var selfText = "";
+    var line = "";
     for(d in ds){
         if(ds[d][0] == '#'){
             labels[ds[d].substring(1)] = mem;
@@ -342,19 +357,24 @@ function mTIS(){
         }
     }
     for(d in ds){
-        if(ds[d] == ""){
-            bin = bin + "\n";
+        line = ds[d].trim();
+        if(line == ""){
+            if(d < ds.length - 1){
+                selfText = selfText + "<br />";
+                bin = bin + "\n";
+            }
             continue;
         }
-        if(ds[d].indexOf("/*") != -1){
+        if(line.indexOf("/*") != -1){
+            selfText = selfText + "<p style='color:" + getCommentColor() + "'>";
             isComment = 1;
         }
-        if(ds[d][0] == '@' || ds[d][0] == '/' || ds[d][0] == '#' || isComment){
+        if(line[0] == '@' || line[0] == '/' || line[0] == '#' || isComment){
             bin = bin + ds[d] + "\n";
             var index = 0;
-            while(index < ds[d].length - 1){
-                if(ds[d][index] == ":"){
-                    var nextC = ds[d][index+1]
+            while(index < line.length - 1){
+                if(line[index] == ":"){
+                    var nextC = line[index+1]
                     if(nextC == "[" || nextC == "("){
                         isEmotion = 1;
                         happiness = happiness - 1;
@@ -365,14 +385,15 @@ function mTIS(){
                 }
                 index = index + 1;
             }
-            if(ds[d].indexOf("*/") != -1){
-                selfText = selfText + ((ds[d].indexOf("/*") != -1) ? ds[d] : "") + "</p>\n";
+            selfText = selfText + ds[d];
+            if(line.indexOf("*/") != -1){
+                selfText = selfText + ((line.indexOf("/*") != -1) ? ds[d] : "") + "</p>\n";
                 isComment = 0;
                 continue;
             }
             continue;
         }
-        var words = ds[d].split(/[ ,]+/g);
+        var words = line.split(/[ ,]+/g);
         if(words[0] == "sub"){
             bin = bin + "0000 " + FN(words[2]) + " " + FN(words[3]) + " " + FN(words[1]);
         }else if(words[0] == "movl"){
@@ -394,8 +415,10 @@ function mTIS(){
         }else if(words[0] == "invalid"){
             bin = bin + "0001 0001 0001 0001";
         }else{
+            selfText = selfText + ds[d];
             bin = bin + "xxxx xxxx xxxx xxxx";
         }
+        selfText = selfText + ((d == ds.length - 1) ? "" : "<br />");
         bin = bin + "\n";
     }
     if(isEmotion == 1){
@@ -403,18 +426,61 @@ function mTIS(){
     } else {
         document.getElementById("extras").style.display = "none";
     }
-    /*range code please keep Move to highlighting code
-    var ra = new Range();
-    ra.setStart(document.getElementById("Highlight"), 1);
+    //range code please keep Move to highlighting code
+    /*var ra = new Range();
+    var offset = window.getSelection().getRangeAt(0).startOffset;
     window.getSelection().removeAllRanges();
-    window.getSelection().addRange(ra);
-    */
+    document.getElementById("TIS").innerHTML = selfText;
+    ra.setStart(document.getElementById("TIS").childNodes[0], offset);
+    window.getSelection().addRange(ra);*/
+
     //document.getElementById("TIS").setSelectionRange(2,2);
+    //getAbsPos();
+    //document.getElementById("TIS").innerHTML = selfText;
     document.getElementById("BIN").value = (bin == "" ? bin : bin.substring(0, bin.length - 1));
     movB2H();
     TISGL();
     BINGL();
     draw();
+}
+var db_childIndex = 0;
+function getAbsPos(){
+   var ra = window.getSelection().getRangeAt(0);
+   var totalOffset = 0;
+   var offset = ra.startOffset;
+   var holder = ra.startContainer;
+   var childIndex = 0;
+   var index = 0;
+   var TTT = document.getElementById("TIS");
+   var target = 0;
+   if(TTT.childNodes.length > 0){
+        while(index < TTT.childNodes.length){
+            target = TTT.childNodes[index];
+            if(target == undefined){
+                childIndex = 0;
+                index = index + 1;
+                continue;
+            }
+            if(target.childNodes != undefined && target.childNodes.length > 0){
+                target = target.childNodes[childIndex];
+            }
+            if((childIndex > 0 && childIndex > TTT.childNodes[0].length) || target==undefined){
+                childIndex = 0;
+                index = index + 1;
+                continue;
+            }
+            if(target.isSameNode(holder)){
+                break;
+            }
+            if(target.innerText != undefined){
+                totalOffset = totalOffset + target.innerText.length
+            }
+            childIndex = childIndex + 1;
+            db_childIndex = childIndex;
+        }
+   }
+   totalOffset = totalOffset + offset;
+   alert(holder + " " + offset + " TOT: " + totalOffset);
 }
 function TISScroll(){
             var myST = document.getElementById("TIS").scrollTop;
@@ -452,43 +518,46 @@ function mHEX(){
     labels = {};
     var mem = 0;
     var isComment = 0;
+    var line = "";
     for(d in ds){
-        if(ds[d][0] == "#"){
+        line = ds[d].trim();
+        if(line[0] == "#"){
             labels[ds[d].substring(1)] = mem;
             continue;
         }
     }
     for(d in ds){
-        if(ds[d] == ""){
+        line = ds[d].trim();
+        if(line == ""){
             bin = bin + "\n";
             continue;
         }
-        if(ds[d].substring(0,2) == "/*"){
+        if(line.indexOf("/*") != -1){
             isComment = 1;
         }
-        if(ds[d][0] == '@' || ds[d][0] == '/' || ds[d][0] == '#' || isComment){
+        if(line[0] == '@' || line[0] == '/' || line[0] == '#' || isComment){
             bin = bin + ds[d] + "\n";
-            if(ds[d].substring(0,2) == "*/"){
+            if(line.indexOf("*/") != -1){
                 isComment = 0;
             }
             continue;
         }
         var index = 0;
-        while(index < ds[d].length){
-            if(ds[d][index] == "["){
+        while(index < line.length){
+            if(line[index] == "["){
                 index = index + 1;
                 var temp = "";
-                while(ds[d][index] != "]" && index < ds[d].length){
-                    temp = temp + ds[d][index];
+                while(line[index] != "]" && index < line.length){
+                    temp = temp + line[index];
                     index = index + 1;
                 }
                 bin = bin + "[" + temp + "]";
                 index = index + 1;
-            } else if(ds[d][index] == " "){
+            } else if(line[index] == " "){
                 index = index + 1;
                 continue;
             } else {
-                bin = bin + FH(ds[d][index]);
+                bin = bin + FH(line[index]);
                 index = index + 1;
             }
             if(state < 3){
@@ -505,7 +574,7 @@ function mHEX(){
         }
     }
     while(state < 4 && state != 0){
-        bin = bin + "xxxx";
+        bin = bin + "xxxx ";
         state = state + 1;
     }
     document.getElementById("BIN").value = (bin == "" ? bin : bin.substring(0, bin.length - 1));
