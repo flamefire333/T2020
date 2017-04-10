@@ -185,7 +185,7 @@ function movB2T(){
         line = ds[d].trim();
         if(line==""){
             if(d != ds.length - 1){
-                t = t + "\n<br />";
+                t = t + "\n";
             }
             continue;
         }else{
@@ -193,7 +193,7 @@ function movB2T(){
                 isComment = 1;
             }
             if(line[0] == '@' || line[0] == '/' || line[0] == '#' || isComment){
-                t = t + ds[d] + "\n<br />";
+                t = t + ds[d] + "\n";
                 if(line.indexOf("*/")){
                     isComment = 0;
                 }
@@ -223,10 +223,10 @@ function movB2T(){
             } else {
                 t = t + "invalid command";
             }
-            t = t + "\n<br />";
+            t = t + "\n";
         }
     }
-    document.getElementById("TIS").innerHTML = (t == "" ? t : t.substring(0, t.length - 1));
+    document.getElementById("TIS").value = (t == "" ? t : t.substring(0, t.length - 1));
     TISGL();
 }
 function BINGL(){
@@ -244,7 +244,7 @@ function BINGL(){
             break;
         }
         if(line[0] == '@'){
-            mem = Number("0x" + line[n].substring(1));
+            mem = Number("0x" + line.substring(1));
         }
         if(line.indexOf("/*") != -1){
             isComment = 1;
@@ -325,7 +325,7 @@ function HEXGL(){
 }
 function TISGL(){
     var lines = "";
-    var data = document.getElementById("TIS").innerText;
+    var data = document.getElementById("TIS").value;
     var ds = data.split("\n");
     var n = 0;
     while(n < ds.length){
@@ -339,7 +339,7 @@ function TISGL(){
     document.getElementById("TISLN").value = lines;
 }
 function mTIS(){
-    var data = document.getElementById("TIS").innerText;
+    var data = document.getElementById("TIS").value;
     var ds = data.split("\n");
     var d;
     var bin = "";
@@ -760,7 +760,7 @@ a{
                                 <textarea cols="4" style="overflow:hidden;" id="TISLN" readonly></textarea>
                             </td>
                             <td style="width:100%;">
-                                <code contenteditable = "true" id="TIS" oninput="mTIS();" onscroll="TISScroll();" value="" style="width:100%;"></textarea>
+                                <textarea id="TIS" onkeyup="mTIS();" onpaste="mTIS();"  onscroll="TISScroll();" value="" style="width:100%;"></textarea>
                             </td>
                         </tr>
                     </table>
