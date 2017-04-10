@@ -251,13 +251,13 @@ a{
                     return val;
                 }
                 function isRegADefined(){
-                    return regs[aa].indexOf("X") == -1;
+                    return regs[aa] != undefined && regs[aa].indexOf("X") == -1;
                 }
                 function isRegBDefined(){
-                    return regs[bb].indexOf("X") == -1;
+                    return regs[bb] != undefined && regs[bb].indexOf("X") == -1;
                 }
                 function isRegTDefined(){
-                    return regs[tt].indexOf("X") == -1
+                    return regs[tt] != undefined && regs[tt].indexOf("X") == -1
                 }
                 var lastPC = 0;
                 function stepQ(){
@@ -340,6 +340,8 @@ a{
                         stepPC();
                     }
                     if(isJz | isJnz | isJs | isJns){
+                        aa = a;
+                        tt = t;
                         if(!isRegADefined() || !isRegTDefined()){
                                                 loop = 0;
                                                 current = "UNDEFINED JUMP";
@@ -408,7 +410,7 @@ a{
                     if(isSt){
                         aa = a;
                         tt = t;
-                        if(!isRegADefined() || !isRegBDefined()){
+                        if(!isRegADefined() || !isRegTDefined()){
                                                 loop = 0;
                                                 current = "UNDEFINED STORE";
                                                 alert("PROGRAM TRIED DOING STORE WITH UNDEFINED REGISTERS AT BYTE ADDRESS: " + addr);

@@ -2,6 +2,13 @@
 <body>
 <script type="text/javascript">
 //AJAX FROM W3schools: https://www.w3schools.com/xml/ajax_intro.asp
+function getBaseURL() {
+    if(document.getElementById("projects").value == "9"){
+        return "testGetter.php?project=9";
+    } else {
+        return "testGetter.php?project=a";
+    }
+}
 function loadOptions() {
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
@@ -9,7 +16,7 @@ function loadOptions() {
             document.getElementById("tests").innerHTML = this.responseText;
         }
       };
-      xhttp.open("GET", "testGetter.php", true);
+      xhttp.open("GET", getBaseURL(), true);
       xhttp.send();
 }
 function getTest() {
@@ -20,7 +27,7 @@ function getTest() {
         }
     };
     var option = document.getElementById("tests").value;
-    xhttp.open("GET", "testGetter.php?test=" + option + ".hex", true);
+    xhttp.open("GET", getBaseURL() + "&test=" + option + ".hex", true);
     xhttp.send();
 }
 function getOK() {
@@ -31,7 +38,7 @@ function getOK() {
         }
     };
     var option = document.getElementById("tests").value;
-    xhttp.open("GET", "testGetter.php?test=" + option + ".ok", true);
+    xhttp.open("GET", getBaseURL() + "&test=" + option + ".ok", true);
     xhttp.send();
 }
 </script>
@@ -57,6 +64,10 @@ a{
     color:#FF8800;
 }
 </style>
+<select id = "projects" onchange = "loadOptions();">
+    <option value = "a">pa</option>
+    <option value = "9">p9</option>
+</select>
 <select id = "tests">
     <option value = "Q">BANANA</option>
 </select>
