@@ -147,7 +147,9 @@ function movB2H(){
     var line = "";
     for(d in ds){
         line = ds[d].trim();
-        if(line!=""){
+        if(line == "" && d != ds.length - 1){
+            hex = hex + "\n";
+        }else if(line!=""){
             if(line.indexOf("/*") != -1) {
                 isComment = 1;
             }
@@ -293,20 +295,25 @@ function HEXGL(){
                 other = other + " ";
             }
             temp = "[" + mem + "]" + (paired == 1 ? " " + temp : " " + other);
-            paired = 1 - paired;
+            paired = 1;
             var hexCount = 0;
             var ind = 0;
             while(ind < line.length){
-                if(line[ind] == "["){
-                    while(line[ind] != "]" && ind < line.length){
-                        ind = ind + 1;
+                if(line[ind] == "/"){
+                    break;
+                }
+                if(line[ind].toLowerCase() in hb){
+                    if(line[ind] == "["){
+                        while(line[ind] != "]" && ind < line.length){
+                            ind = ind + 1;
+                        }
                     }
+                    if(line[ind] == " "){
+                        ind = ind + 1;
+                        continue;
+                    }
+                    hexCount = hexCount + 1;
                 }
-                if(line[ind] == " "){
-                    ind = ind + 1;
-                    continue;
-                }
-                hexCount = hexCount + 1;
                 ind = ind + 1;
             }
             mem = mem + (hexCount / 2);
@@ -488,6 +495,8 @@ function TISScroll(){
                 document.getElementById("TISLN").scrollTop = myST;
                 document.getElementById("BIN").scrollTop = myST;
                 document.getElementById("BINLN").scrollTop = myST;
+                document.getElementById("HEX").scrollTop = myST;
+                document.getElementById("HEXLN").scrollTop = myST;
             }
 }
 function BINScroll(){
@@ -496,11 +505,17 @@ function BINScroll(){
                 document.getElementById("BINLN").scrollTop = myST;
                 document.getElementById("TIS").scrollTop = myST;
                 document.getElementById("TISLN").scrollTop = myST;
+                document.getElementById("HEX").scrollTop = myST;
+                document.getElementById("HEXLN").scrollTop = myST;
             }
 }
 function HEXScroll(){
             var myST = document.getElementById("HEX").scrollTop;
             if(myST != document.getElementById("HEXLN").scrollTop){
+                document.getElementById("TIS").scrollTop = myST;
+                document.getElementById("TISLN").scrollTop = myST;
+                document.getElementById("BIN").scrollTop = myST;
+                document.getElementById("BINLN").scrollTop = myST;
                 document.getElementById("HEXLN").scrollTop = myST;
             }
 }
@@ -544,6 +559,9 @@ function mHEX(){
         }
         var index = 0;
         while(index < line.length){
+            if(line[index] == "/"){
+                break;
+            }
             if(line[index] == "["){
                 index = index + 1;
                 var temp = "";
