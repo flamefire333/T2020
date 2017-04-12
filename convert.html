@@ -542,7 +542,7 @@ function mHEX(){
         }
     }
     for(d in ds){
-        line = ds[d].trim();
+        line = ds[d].toLowerCase().trim();
         if(line == ""){
             bin = bin + "\n";
             continue;
